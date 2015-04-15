@@ -10,10 +10,12 @@ function main()
     //     ];
     $board = readBoard();
 
-    upperTwoRows($board);
+    $result = [];
+    $result = array_merge($result, upperTwoRows($board));
     // printBoard($board);
-    lowerTwoRows($board);
+    $result = array_merge($result, lowerTwoRows($board));
     // printBoard($board);
+    writeResult($result);
 }
 
 function readBoard()
@@ -36,43 +38,49 @@ function readBoard()
 
 function upperTwoRows(&$board)
 {
-    moveTo(1, 0, 0, $board);
-    moveTo(2, 1, 0, $board);
-    moveTo(3, 2, 0, $board);
-    fixRow(0, $board);
+    $result = [];
+    moveTo(1, 0, 0, $board, $result);
+    moveTo(2, 1, 0, $board, $result);
+    moveTo(3, 2, 0, $board, $result);
+    fixRow(0, $board, $result);
 
-    moveTo(5, 0, 1, $board);
-    moveTo(6, 1, 1, $board);
-    moveTo(7, 2, 1, $board);
-    fixRow(1, $board);
+    moveTo(5, 0, 1, $board, $result);
+    moveTo(6, 1, 1, $board, $result);
+    moveTo(7, 2, 1, $board, $result);
+    fixRow(1, $board, $result);
+
+    return $result;
 }
 
 function lowerTwoRows(&$board)
 {
+    $result = [];
     if (!($board[2][0] == 9 && $board[3][0] == 13)) {
-        lowerMoveTo(13, 0, 2, $board);
-        fixColumn(0, $board);
+        lowerMoveTo(13, 0, 2, $board, $result);
+        fixColumn(0, $board, $result);
     }
 
     if (!($board[2][1] == 10 && $board[3][1] == 14)) {
-        lowerMoveTo(14, 1, 2, $board);
-        fixColumn(1, $board);
+        lowerMoveTo(14, 1, 2, $board, $result);
+        fixColumn(1, $board, $result);
     }
 
-    lowerMoveTo(11, 2, 2, $board);
-    moveSpaceTo(3, 3, $board, buildWallsUpTo(11, $board));
+    lowerMoveTo(11, 2, 2, $board, $result);
+    moveSpaceTo(3, 3, $board, buildWallsUpTo(11, $board), $result);
+
+    return $result;
 }
 
-function fixRow($row, &$board)
+function fixRow($row, &$board, &$result)
 {
     list($sx, $sy) = locationOf(0, $board);
     if ($sx == 3 && $sy == $row) {
-        step($sx, $sy, [0, 1], $board);
+        step($sx, $sy, [0, 1], $board, $result);
     }
     $n = ($row + 1) * 4;
     if ($board[$row][3] != $n) {
-        moveTo($n, 3, $row + 2, $board);
-        moveSpaceTo(3, $row, $board, buildWallsUpTo($n, $board));
+        moveTo($n, 3, $row + 2, $board, $result);
+        moveSpaceTo(3, $row, $board, buildWallsUpTo($n, $board), $result);
         list($sx, $sy) = [3, $row];
         $moves = [
             [-1, 0],
@@ -86,21 +94,21 @@ function fixRow($row, &$board)
             [0, 1],
         ];
         foreach ($moves as $m) {
-            step($sx, $sy, $m, $board);
+            step($sx, $sy, $m, $board, $result);
         }
     }
 }
 
-function fixColumn($col, &$board)
+function fixColumn($col, &$board, &$result)
 {
     $n = $col + 9;
     list($x, $y) = locationOf($n, $board);
     if ($x != $col + 1 || $y != 2) {
         list($sx, $sy) = locationOf(0, $board);
         if ($sx == $col && $sy == 3) {
-            step($sx, $sy, [1, 0], $board);
+            step($sx, $sy, [1, 0], $board, $result);
         } else {
-            moveSpaceTo($col + 1, 3, $board, buildWallsUpTo($n, $board));
+            moveSpaceTo($col + 1, 3, $board, buildWallsUpTo($n, $board), $result);
         }
         if ($board[3][$col] == $n) {
             list($sx, $sy) = [$col + 1, 3];
@@ -109,50 +117,50 @@ function fixColumn($col, &$board)
                 [-1, 0], [0, 1], [1, 0], [0, -1], [1, 0],
             ];
             foreach ($moves as $m) {
-                step($sx, $sy, $m, $board);
+                step($sx, $sy, $m, $board, $result);
             }
         } else {
-            moveTo($n, $col + 1, 2, $board);
+            moveTo($n, $col + 1, 2, $board, $result);
         }
     }
-    moveSpaceTo($col, 3, $board, buildWallsUpTo($n, $board));
+    moveSpaceTo($col, 3, $board, buildWallsUpTo($n, $board), $result);
     list($sx, $sy) = [$col, 3];
-    step($sx, $sy, [0, -1], $board);
-    step($sx, $sy, [1, 0], $board);
+    step($sx, $sy, [0, -1], $board, $result);
+    step($sx, $sy, [1, 0], $board, $result);
 }
 
-function moveTo($n, $tx, $ty, &$board)
+function moveTo($n, $tx, $ty, &$board, &$result)
 {
     list($x, $y) = locationOf($n, $board);
     while ($x != $tx) {
         $dx = $x < $tx ? 1 : -1;
         $sx = $x + $dx;
-        moveSpaceTo($sx, $y, $board, buildWallsUpTo($n, $board));
-        step($sx, $y, [-$dx, 0], $board);
+        moveSpaceTo($sx, $y, $board, buildWallsUpTo($n, $board), $result);
+        step($sx, $y, [-$dx, 0], $board, $result);
         $x += $dx;
     }
     while ($y != $ty) {
         $dy = $y < $ty ? 1 : -1;
         $sy = $y + $dy;
-        moveSpaceTo($x, $sy, $board, buildWallsUpTo($n, $board));
-        step($x, $sy, [0, -$dy], $board);
+        moveSpaceTo($x, $sy, $board, buildWallsUpTo($n, $board), $result);
+        step($x, $sy, [0, -$dy], $board, $result);
         $y += $dy;
     }
 }
 
-function lowerMoveTo($n, $tx, $ty, &$board)
+function lowerMoveTo($n, $tx, $ty, &$board, &$result)
 {
     list($x, $y) = locationOf($n, $board);
     while ($x > $tx) {
         $sx = $x - 1;
-        moveSpaceTo($sx, $y, $board, buildWallsEqualsTo($n, $tx, $board));
-        step($sx, $y, [1, 0], $board);
+        moveSpaceTo($sx, $y, $board, buildWallsEqualsTo($n, $tx, $board), $result);
+        step($sx, $y, [1, 0], $board, $result);
         --$x;
     }
     while ($y > $ty) {
         $sy = $y - 1;
-        moveSpaceTo($x, $sy, $board, buildWallsEqualsTo($n, $tx, $board));
-        step($x, $sy, [0, 1], $board);
+        moveSpaceTo($x, $sy, $board, buildWallsEqualsTo($n, $tx, $board), $result);
+        step($x, $sy, [0, 1], $board, $result);
         --$y;
     }
 }
@@ -185,7 +193,7 @@ function buildWallsEqualsTo($n, $tx, $board)
     return $walls;
 }
 
-function moveSpaceTo($tx, $ty, &$board, $walls)
+function moveSpaceTo($tx, $ty, &$board, $walls, &$result)
 {
     list($sx, $sy) = locationOf(0, $board);
 
@@ -211,7 +219,7 @@ function moveSpaceTo($tx, $ty, &$board, $walls)
     }
 
     while ($sx != $tx || $sy != $ty) {
-        step($sx, $sy, $walls[$sy][$sx], $board);
+        step($sx, $sy, $walls[$sy][$sx], $board, $result);
     }
 }
 
@@ -226,7 +234,7 @@ function locationOf($n, $board)
     }
 }
 
-function step(&$x, &$y, $d, &$board)
+function step(&$x, &$y, $d, &$board, &$result)
 {
     list($dx, $dy) = $d;
     $n = $board[$y + $dy][$x + $dx];
@@ -235,7 +243,7 @@ function step(&$x, &$y, $d, &$board)
 
     $x += $dx;
     $y += $dy;
-    echo $n . "\n";
+    $result[] = $n;
 }
 
 function printBoard($board)
@@ -251,6 +259,13 @@ function printBoard($board)
         echo "\n";
     }
     echo "\n";
+}
+
+function writeResult($result)
+{
+    foreach ($result as $n) {
+        echo $n . "\n";
+    }
 }
 
 main();
