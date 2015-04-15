@@ -11,9 +11,8 @@ function main()
     $board = readBoard();
 
     upperTwoRows($board);
-    // printBoard($board);
     lowerTwoRows($board);
-    // printBoard($board);
+    printBoard($board);
 }
 
 function readBoard()
@@ -89,6 +88,7 @@ function fixRow($row, &$board)
             step($sx, $sy, $m, $board);
         }
     }
+    printBoard($board);
 }
 
 function fixColumn($col, &$board)
@@ -99,6 +99,8 @@ function fixColumn($col, &$board)
         list($sx, $sy) = locationOf(0, $board);
         if ($sx == $col && $sy == 3) {
             step($sx, $sy, [1, 0], $board);
+        } else {
+            moveSpaceTo($col + 1, 3, $board, buildWallsUpTo($n, $board));
         }
         if ($board[3][$col] == $n) {
             list($sx, $sy) = [$col + 1, 3];
@@ -108,6 +110,7 @@ function fixColumn($col, &$board)
             ];
             foreach ($moves as $m) {
                 step($sx, $sy, $m, $board);
+                printBoard($board);
             }
         } else {
             moveTo($n, $col + 1, 2, $board);
@@ -117,6 +120,7 @@ function fixColumn($col, &$board)
     list($sx, $sy) = [$col, 3];
     step($sx, $sy, [0, -1], $board);
     step($sx, $sy, [1, 0], $board);
+    printBoard($board);
 }
 
 function moveTo($n, $tx, $ty, &$board)
@@ -136,6 +140,7 @@ function moveTo($n, $tx, $ty, &$board)
         step($x, $sy, [0, -$dy], $board);
         $y += $dy;
     }
+    printBoard($board);
 }
 
 function lowerMoveTo($n, $tx, $ty, &$board)
@@ -153,6 +158,7 @@ function lowerMoveTo($n, $tx, $ty, &$board)
         step($x, $sy, [0, 1], $board);
         --$y;
     }
+    printBoard($board);
 }
 
 function buildWallsUpTo($n, $board)
@@ -233,7 +239,7 @@ function step(&$x, &$y, $d, &$board)
 
     $x += $dx;
     $y += $dy;
-    echo $n . "\n";
+    // echo $n . "\n";
 }
 
 function printBoard($board)
