@@ -11,22 +11,6 @@ function main()
     writeResult($result);
 }
 
-function solveUD($board)
-{
-    $result = [];
-    $result = array_merge($result, upperTwoRows($board));
-    // printBoard($board);
-    $result = array_merge($result, lowerTwoRowsFast($board));
-    // printBoard($board);
-    return $result;
-}
-
-function solveLR($board)
-{
-    $board = array_map(null, $board[0], $board[1], $board[2], $board[3]);
-    return solveUD($board);
-}
-
 function readBoard()
 {
     $board = [];
@@ -45,20 +29,20 @@ function readBoard()
     return $board;
 }
 
-function upperTwoRows(&$board)
+function solveUD($board)
 {
     $result = [];
-    moveTo(1, 0, 0, $board, $result);
-    moveTo(2, 1, 0, $board, $result);
-    moveTo(3, 2, 0, $board, $result);
-    fixRow(0, $board, $result);
-
-    moveTo(5, 0, 1, $board, $result);
-    moveTo(6, 1, 1, $board, $result);
-    moveTo(7, 2, 1, $board, $result);
-    fixRow(1, $board, $result);
-
+    $result = array_merge($result, upperTwoRows($board));
+    // printBoard($board);
+    $result = array_merge($result, lowerTwoRowsFast($board));
+    // printBoard($board);
     return $result;
+}
+
+function solveLR($board)
+{
+    $board = array_map(null, $board[0], $board[1], $board[2], $board[3]);
+    return solveUD($board);
 }
 
 function lowerTwoRowsFast(&$board)
@@ -121,21 +105,18 @@ function decode($encnum, &$board)
     }
 }
 
-function lowerTwoRows(&$board)
+function upperTwoRows(&$board)
 {
     $result = [];
-    if (!($board[2][0] == 9 && $board[3][0] == 13)) {
-        lowerMoveTo(13, 0, 2, $board, $result);
-        fixColumn(0, $board, $result);
-    }
+    moveTo(1, 0, 0, $board, $result);
+    moveTo(2, 1, 0, $board, $result);
+    moveTo(3, 2, 0, $board, $result);
+    fixRow(0, $board, $result);
 
-    if (!($board[2][1] == 10 && $board[3][1] == 14)) {
-        lowerMoveTo(14, 1, 2, $board, $result);
-        fixColumn(1, $board, $result);
-    }
-
-    lowerMoveTo(11, 2, 2, $board, $result);
-    moveSpaceTo(3, 3, $board, buildWallsUpTo(11, $board), $result);
+    moveTo(5, 0, 1, $board, $result);
+    moveTo(6, 1, 1, $board, $result);
+    moveTo(7, 2, 1, $board, $result);
+    fixRow(1, $board, $result);
 
     return $result;
 }
@@ -168,36 +149,6 @@ function fixRow($row, &$board, &$result)
     }
 }
 
-function fixColumn($col, &$board, &$result)
-{
-    $n = $col + 9;
-    list($x, $y) = locationOf($n, $board);
-    if ($x != $col + 1 || $y != 2) {
-        list($sx, $sy) = locationOf(0, $board);
-        if ($sx == $col && $sy == 3) {
-            step($sx, $sy, [1, 0], $board, $result);
-        } else {
-            moveSpaceTo($col + 1, 3, $board, buildWallsUpTo($n, $board), $result);
-        }
-        if ($board[3][$col] == $n) {
-            list($sx, $sy) = [$col + 1, 3];
-            $moves = [
-                [-1, 0], [0, -1], [1, 0], [0, 1], [1, 0], [0, -1], [-1, 0],
-                [-1, 0], [0, 1], [1, 0], [0, -1], [1, 0],
-            ];
-            foreach ($moves as $m) {
-                step($sx, $sy, $m, $board, $result);
-            }
-        } else {
-            moveTo($n, $col + 1, 2, $board, $result);
-        }
-    }
-    moveSpaceTo($col, 3, $board, buildWallsUpTo($n, $board), $result);
-    list($sx, $sy) = [$col, 3];
-    step($sx, $sy, [0, -1], $board, $result);
-    step($sx, $sy, [1, 0], $board, $result);
-}
-
 function moveTo($n, $tx, $ty, &$board, &$result)
 {
     list($x, $y) = locationOf($n, $board);
@@ -217,43 +168,12 @@ function moveTo($n, $tx, $ty, &$board, &$result)
     }
 }
 
-function lowerMoveTo($n, $tx, $ty, &$board, &$result)
-{
-    list($x, $y) = locationOf($n, $board);
-    while ($x > $tx) {
-        $sx = $x - 1;
-        moveSpaceTo($sx, $y, $board, buildWallsEqualsTo($n, $tx, $board), $result);
-        step($sx, $y, [1, 0], $board, $result);
-        --$x;
-    }
-    while ($y > $ty) {
-        $sy = $y - 1;
-        moveSpaceTo($x, $sy, $board, buildWallsEqualsTo($n, $tx, $board), $result);
-        step($x, $sy, [0, 1], $board, $result);
-        --$y;
-    }
-}
-
 function buildWallsUpTo($n, $board)
 {
     $walls = array_fill(0, 4, array_fill(0, 4, 0));
     for ($y = 0; $y <= 3; ++$y) {
         for ($x = 0; $x <= 3; ++$x) {
             if ($board[$y][$x] != 0 && $board[$y][$x] <= $n) {
-                $walls[$y][$x] = 1;
-            }
-        }
-    }
-
-    return $walls;
-}
-
-function buildWallsEqualsTo($n, $tx, $board)
-{
-    $walls = array_fill(0, 4, array_fill(0, 4, 0));
-    for ($y = 0; $y <= 3; ++$y) {
-        for ($x = 0; $x <= 3; ++$x) {
-            if ($x < $tx || $y < 2 || $board[$y][$x] == $n) {
                 $walls[$y][$x] = 1;
             }
         }
