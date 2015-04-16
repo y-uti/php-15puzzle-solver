@@ -2,20 +2,30 @@
 
 function main()
 {
-    // $board = [
-    //     [1, 2, 3, 4],
-    //     [5, 6, 7, 8],
-    //     [13, 10, 11, 12],
-    //     [9, 0, 14, 15],
-    //     ];
     $board = readBoard();
 
+    $resultUD = solveUD($board);
+    $resultLR = solveLR($board);
+    // echo 'UD=' . count($resultUD) . ', LR=' . count($resultLR) . "\n";
+
+    $result = count($resultUD) < count($resultLR) ? $resultUD : $resultLR;
+    writeResult($result);
+}
+
+function solveUD($board)
+{
     $result = [];
     $result = array_merge($result, upperTwoRows($board));
     // printBoard($board);
     $result = array_merge($result, lowerTwoRows($board));
     // printBoard($board);
-    writeResult($result);
+    return $result;
+}
+
+function solveLR($board)
+{
+    $board = array_map(null, $board[0], $board[1], $board[2], $board[3]);
+    return solveUD($board);
 }
 
 function readBoard()
