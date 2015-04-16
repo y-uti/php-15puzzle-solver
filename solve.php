@@ -4,10 +4,10 @@ function main()
 {
     $board = readBoard();
 
-    $resultUD = solveUD($board);
-    $resultLR = solveLR($board);
+    $result = solveUD($board);
+    // $resultLR = solveLR($board);
 
-    $result = count($resultUD) < count($resultLR) ? $resultUD : $resultLR;
+    // $result = count($resultUD) < count($resultLR) ? $resultUD : $resultLR;
     writeResult($result);
 }
 
