@@ -101,6 +101,12 @@ function solve($board, $goal)
         function ($b) use ($goal) {
             return dirRLandPackL(1, $b, $goal);
         },
+        function ($b) use ($goal) {
+            return dirLR2(1, $b, $goal);
+        },
+        function ($b) use ($goal) {
+            return dirRL2(1, $b, $goal);
+        },
     ];
 
     $strategies[] = [
@@ -115,14 +121,22 @@ function solve($board, $goal)
         $b = $board;
         $r = [];
         foreach ($chain as $s) {
-            list($rnext, $b) = $s($b);
-            $r = array_merge($r, $rnext);
+            $sres = $s($b);
+            if ($sres !== false) {
+                list($rnext, $b) = $s($b);
+                $r = array_merge($r, $rnext);
+            } else {
+                $r = false;
+                break;
+            }
         }
-        // echo 'Length = ' . count($r) . "\n";
-        // printBoard($b);
+        if ($r !== false) {
+            // echo 'Length = ' . count($r) . "\n";
+            // printBoard($b);
 
-        if ($best === false || count($r) < count($best)) {
-            $best = $r;
+            if ($best === false || count($r) < count($best)) {
+                $best = $r;
+            }
         }
     }
 
@@ -207,7 +221,9 @@ function fixRow($n, $tx, $ty, &$board, &$result, $buildWallsFun)
         moveTo($n, $tx, $ty + 2, $board, $result, $bwFunFix);
         $walls = $buildWallsFun($tx, $ty);
         $walls[$ty + 2][$tx] = 1;
-        moveSpaceTo($tx, $ty, $board, $walls, $result);
+        if (moveSpaceTo($tx, $ty, $board, $walls, $result) === false) {
+            return false;
+        }
         list($sx, $sy) = [$tx, $ty];
         $moves = [
             [$tx == 3 ? -1 : 1, 0],
@@ -245,10 +261,16 @@ function dirLR2($y, $board, $goal)
     $result = [];
     moveTo($goal[$y][1], 0, $y, $board, $result, $bwFun1);
     moveTo2($goal[$y][0], 0, $y + 1, $board, $result, $bwFun2);
-    moveTo($goal[$y][2], 1, $y, $board, $result, $bwFun3);
-    moveTo($goal[$y][3], 2, $y, $board, $result, $bwFun3);
-    moveSpaceTo(3, $y, $board, $bwFun3(3, $y), $result);
-    list($sx, $sy) = [3, 0];
+    if (moveTo($goal[$y][2], 1, $y, $board, $result, $bwFun3) === false) {
+        return false;
+    }
+    if (moveTo($goal[$y][3], 2, $y, $board, $result, $bwFun3) === false) {
+        return false;
+    }
+    if (moveSpaceTo(3, $y, $board, $bwFun3(3, $y), $result) === false) {
+        return false;
+    }
+    list($sx, $sy) = [3, $y];
     $moves = [[-1, 0], [-1, 0], [-1, 0], [0, 1]];
     foreach ($moves as $m) {
         step($sx, $sy, $m, $board, $result);
@@ -276,10 +298,16 @@ function dirRL2($y, $board, $goal)
     $result = [];
     moveTo($goal[$y][2], 3, $y, $board, $result, $bwFun1);
     moveTo2($goal[$y][3], 3, $y + 1, $board, $result, $bwFun2);
-    moveTo($goal[$y][1], 2, $y, $board, $result, $bwFun3);
-    moveTo($goal[$y][0], 1, $y, $board, $result, $bwFun3);
-    moveSpaceTo(0, $y, $board, $bwFun3(0, $y), $result);
-    list($sx, $sy) = [0, 0];
+    if (moveTo($goal[$y][1], 2, $y, $board, $result, $bwFun3) === false) {
+        return false;
+    }
+    if (moveTo($goal[$y][0], 1, $y, $board, $result, $bwFun3) === false) {
+        return false;
+    }
+    if (moveSpaceTo(0, $y, $board, $bwFun3(0, $y), $result) === false) {
+        return false;
+    }
+    list($sx, $sy) = [0, $y];
     $moves = [[1, 0], [1, 0], [1, 0], [0, 1]];
     foreach ($moves as $m) {
         step($sx, $sy, $m, $board, $result);
@@ -298,7 +326,9 @@ function moveTo($n, $tx, $ty, &$board, &$result, $buildWallsFun)
         $sx = $x + $dx;
         $walls = $buildWallsFun($tx, $ty);
         $walls[$y][$x] = 1;
-        moveSpaceTo($sx, $y, $board, $walls, $result);
+        if (moveSpaceTo($sx, $y, $board, $walls, $result) === false) {
+            return false;
+        }
         step($sx, $y, [-$dx, 0], $board, $result);
         $x += $dx;
     }
@@ -307,7 +337,9 @@ function moveTo($n, $tx, $ty, &$board, &$result, $buildWallsFun)
         $sy = $y + $dy;
         $walls = $buildWallsFun($tx, $ty);
         $walls[$y][$x] = 1;
-        moveSpaceTo($x, $sy, $board, $walls, $result);
+        if (moveSpaceTo($x, $sy, $board, $walls, $result) === false) {
+            return false;
+        }
         step($x, $sy, [0, -$dy], $board, $result);
         $y += $dy;
     }
@@ -321,7 +353,9 @@ function moveTo2($n, $tx, $ty, &$board, &$result, $buildWallsFun)
         $sy = $y + $dy;
         $walls = $buildWallsFun($tx, $ty);
         $walls[$y][$x] = 1;
-        moveSpaceTo($x, $sy, $board, $walls, $result);
+        if (moveSpaceTo($x, $sy, $board, $walls, $result) === false) {
+            return false;
+        }
         step($x, $sy, [0, -$dy], $board, $result);
         $y += $dy;
     }
@@ -330,7 +364,9 @@ function moveTo2($n, $tx, $ty, &$board, &$result, $buildWallsFun)
         $sx = $x + $dx;
         $walls = $buildWallsFun($tx, $ty);
         $walls[$y][$x] = 1;
-        moveSpaceTo($sx, $y, $board, $walls, $result);
+        if (moveSpaceTo($sx, $y, $board, $walls, $result) === false) {
+            return false;
+        }
         step($sx, $y, [-$dx, 0], $board, $result);
         $x += $dx;
     }
@@ -376,24 +412,28 @@ function moveSpaceTo($tx, $ty, &$board, $walls, &$result)
     list($sx, $sy) = locationOf(0, $board);
 
     $queue = [[$tx, $ty]];
-    while ($walls[$sy][$sx] == 0) {
+    while ($walls[$sy][$sx] == 0 && count($queue) > 0) {
         list($x, $y) = array_shift($queue);
-        if ($x < 3 && $walls[$y][$x + 1] == 0) {
+        if ($x < 3 && $walls[$y][$x + 1] === 0) {
             $walls[$y][$x + 1] = [-1, 0];
             $queue[] = [$x + 1, $y];
         }
-        if ($x > 0 && $walls[$y][$x - 1] == 0) {
+        if ($x > 0 && $walls[$y][$x - 1] === 0) {
             $walls[$y][$x - 1] = [1, 0];
             $queue[] = [$x - 1, $y];
         }
-        if ($y < 3 && $walls[$y + 1][$x] == 0) {
+        if ($y < 3 && $walls[$y + 1][$x] === 0) {
             $walls[$y + 1][$x] = [0, -1];
             $queue[] = [$x, $y + 1];
         }
-        if ($y > 0 && $walls[$y - 1][$x] == 0) {
+        if ($y > 0 && $walls[$y - 1][$x] === 0) {
             $walls[$y - 1][$x] = [0, 1];
             $queue[] = [$x, $y - 1];
         }
+    }
+
+    if ($walls[$sy][$sx] == 0) {
+        return false;
     }
 
     while ($sx != $tx || $sy != $ty) {
