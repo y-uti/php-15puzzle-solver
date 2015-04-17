@@ -131,6 +131,7 @@ function solve($board, $goal)
             }
         }
         if ($r !== false) {
+            // pathCompression($r);
             // echo 'Length = ' . count($r) . "\n";
             // printBoard($b);
 
@@ -142,6 +143,20 @@ function solve($board, $goal)
 
     return $best;
 }
+
+// function pathCompression(&$r)
+// {
+//     $i = 0;
+//     while ($i < count($r) - 1) {
+//         if ($r[$i] == $r[$i + 1]) {
+//             array_splice($r, $i, 2);
+//         } else {
+//             ++$i;
+//         }
+//     }
+// }
+
+//////////////////////////////////////////////////////////////////////
 
 function lowerTwoRowsFast(&$board, $goal)
 {
