@@ -3,12 +3,35 @@
 function main()
 {
     $board = readBoard();
+    $result = solveUD($board);
+    // $resultUD = solveUD($board);
+    // $resultLR = solveLR($board);
 
-    $resultUD = solveUD($board);
-    $resultLR = solveLR($board);
-
-    $result = count($resultUD) < count($resultLR) ? $resultUD : $resultLR;
+    // $result = count($resultUD) < count($resultLR) ? $resultUD : $resultLR;
     writeResult($result);
+}
+
+function randomBoard()
+{
+    $board = [
+        [1, 2, 3, 4],
+        [5, 6, 7, 8],
+        [9, 10, 11, 12],
+        [13, 14, 15, 0],
+    ];
+
+    for ($i = 0; $i < 1000; ++$i) {
+        list($x, $y) = locationOf(0, $board);
+        $cands = [];
+        if ($x != 0) $cands[] = [-1, 0];
+        if ($x != 3) $cands[] = [1, 0];
+        if ($y != 0) $cands[] = [0, -1];
+        if ($y != 3) $cands[] = [0, 1];
+        $r = [];
+        step($x, $y, $cands[rand() % count($cands)], $board, $r);
+    }
+
+    return $board;
 }
 
 function readBoard()
@@ -60,18 +83,18 @@ function solve($board, $goal)
         function ($b) use ($goal) {
             return dirLRandPackR(0, $b, $goal);
         },
-        function ($b) use ($goal) {
-            return dirRLandPackL(0, $b, $goal);
-        },
+        // function ($b) use ($goal) {
+        //     return dirRLandPackL(0, $b, $goal);
+        // },
     ];
 
     $strategies[] = [
         function ($b) use ($goal) {
             return dirLRandPackR(1, $b, $goal);
         },
-        function ($b) use ($goal) {
-            return dirRLandPackL(1, $b, $goal);
-        },
+        // function ($b) use ($goal) {
+        //     return dirRLandPackL(1, $b, $goal);
+        // },
     ];
 
     $strategies[] = [
@@ -133,19 +156,6 @@ function encode($board, $numbers)
     }
     return $encnum;
 }
-
-// function upperTwoRows(&$board, $goal)
-// {
-//     // list($r1, $b1) = dirLRandPackR(0, $board, $goal);
-//     // list($r2, $b2) = dirLRandPackR(1, $b1, $goal);
-//     // $board = $b2;
-
-//     list($r1, $b1) = dirRLandPackL(0, $board, $goal);
-//     list($r2, $b2) = dirRLandPackL(1, $b1, $goal);
-//     $board = $b2;
-
-//     return array_merge($r1, $r2);
-// }
 
 function dirLRandPackR($y, $board, $goal)
 {
@@ -217,7 +227,6 @@ function moveTo($n, $tx, $ty, &$board, &$result, $buildWallsFun)
         $dx = $x < $tx ? 1 : -1;
         $sx = $x + $dx;
         $walls = $buildWallsFun($tx, $ty);
-        // $walls = buildWallsUL($tx, $fix ? $ty - 2 : $ty);
         $walls[$y][$x] = 1;
         moveSpaceTo($sx, $y, $board, $walls, $result);
         step($sx, $y, [-$dx, 0], $board, $result);
@@ -227,7 +236,6 @@ function moveTo($n, $tx, $ty, &$board, &$result, $buildWallsFun)
         $dy = $y < $ty ? 1 : -1;
         $sy = $y + $dy;
         $walls = $buildWallsFun($tx, $ty);
-        // $walls = buildWallsUL($tx, $fix ? $ty - 2 : $ty);
         $walls[$y][$x] = 1;
         moveSpaceTo($x, $sy, $board, $walls, $result);
         step($x, $sy, [0, -$dy], $board, $result);
@@ -336,14 +344,16 @@ function writeResult($result)
 function cartesianProduct(array $arrays)
 {
     if (!$arrays) {
-        yield array();
+        return [[]];
     } else {
         $tail = array_pop($arrays);
+        $result = [];
         foreach (cartesianProduct($arrays) as $values) {
             foreach ($tail as $v) {
-                yield array_merge($values, array($v));
+                $result[] = array_merge($values, array($v));
             }
         }
+        return $result;
     }
 }
 
