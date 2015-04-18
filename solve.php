@@ -11,28 +11,37 @@ function main()
     writeResult($result);
 }
 
-// function randomBoard()
+// function main()
 // {
-//     $board = [
-//         [1, 2, 3, 4],
-//         [5, 6, 7, 8],
-//         [9, 10, 11, 12],
-//         [13, 14, 15, 0],
-//     ];
-
-//     for ($i = 0; $i < 1000; ++$i) {
-//         list($x, $y) = locationOf(0, $board);
-//         $cands = [];
-//         if ($x != 0) $cands[] = [-1, 0];
-//         if ($x != 3) $cands[] = [1, 0];
-//         if ($y != 0) $cands[] = [0, -1];
-//         if ($y != 3) $cands[] = [0, 1];
-//         $r = [];
-//         step($x, $y, $cands[rand() % count($cands)], $board, $r);
+//     while (true) {
+//         $board = randomBoard();
+//         $resultUD = solveUD($board);
+//         $resultLR = solveLR($board);
 //     }
-
-//     return $board;
 // }
+
+function randomBoard()
+{
+    $board = [
+        [1, 2, 3, 4],
+        [5, 6, 7, 8],
+        [9, 10, 11, 12],
+        [13, 14, 15, 0],
+    ];
+
+    for ($i = 0; $i < 1000; ++$i) {
+        list($x, $y) = locationOf(0, $board);
+        $cands = [];
+        if ($x != 0) $cands[] = [-1, 0];
+        if ($x != 3) $cands[] = [1, 0];
+        if ($y != 0) $cands[] = [0, -1];
+        if ($y != 3) $cands[] = [0, 1];
+        $r = [];
+        step($x, $y, $cands[rand() % count($cands)], $board, $r);
+    }
+
+    return $board;
+}
 
 function readBoard()
 {
@@ -92,6 +101,18 @@ function solve($board, $goal)
         function ($b) use ($goal) {
             return dirRL2(0, $b, $goal);
         },
+        function ($b) use ($goal) {
+            return dirLR3(0, $b, $goal);
+        },
+        function ($b) use ($goal) {
+            return dirRL3(0, $b, $goal);
+        },
+        function ($b) use ($goal) {
+            return dirLR4(0, $b, $goal);
+        },
+        function ($b) use ($goal) {
+            return dirRL4(0, $b, $goal);
+        },
     ];
 
     $strategies[] = [
@@ -106,6 +127,18 @@ function solve($board, $goal)
         },
         function ($b) use ($goal) {
             return dirRL2(1, $b, $goal);
+        },
+        function ($b) use ($goal) {
+            return dirLR3(1, $b, $goal);
+        },
+        function ($b) use ($goal) {
+            return dirRL3(1, $b, $goal);
+        },
+        function ($b) use ($goal) {
+            return dirLR4(1, $b, $goal);
+        },
+        function ($b) use ($goal) {
+            return dirRL4(1, $b, $goal);
         },
     ];
 
@@ -209,17 +242,12 @@ function dirLRandPackR($y, $board, $goal)
 
 function dirRLandPackL($y, $board, $goal)
 {
-    $bwFun = function ($x, $y) {
-        return buildWallsUR($x, $y);
-    };
-
-    $result = [];
-    moveTo($goal[$y][3], 3, $y, $board, $result, $bwFun);
-    moveTo($goal[$y][2], 2, $y, $board, $result, $bwFun);
-    moveTo($goal[$y][1], 1, $y, $board, $result, $bwFun);
-    fixRow($goal[$y][0], 0, $y, $board, $result, $bwFun);
-
-    return [$result, $board];
+    $board = flipLR($board);
+    $goal = flipLR($goal);
+    if (($res = dirLRandPackR($y, $board, $goal)) === false) {
+        return false;
+    }
+    return [$res[0], flipLR($res[1])];
 }
 
 function fixRow($n, $tx, $ty, &$board, &$result, $buildWallsFun)
@@ -294,41 +322,112 @@ function dirLR2($y, $board, $goal)
     return [$result, $board];
 }
 
-function dirRL2($y, $board, $goal)
+function dirLR3($y, $board, $goal)
 {
     $bwFun1 = function ($x, $y) {
-        return buildWallsUR($x, $y);
+        return buildWallsUL($x, $y);
     };
 
     $bwFun2 = function ($x, $y) {
-        return buildWallsUR($x - 1, $y - 1);
+        return buildWallsUL(3, $y - 1);
     };
 
     $bwFun3 = function ($x, $y) {
-        $walls = buildWallsUR($x, $y);
-        $walls[$y + 1][3] = 1;
+        $walls = buildWallsUL($x, $y);
+        $walls[$y + 1][1] = 1;
         return $walls;
     };
 
     $result = [];
-    moveTo($goal[$y][2], 3, $y, $board, $result, $bwFun1);
-    moveTo2($goal[$y][3], 3, $y + 1, $board, $result, $bwFun2);
-    if (moveTo($goal[$y][1], 2, $y, $board, $result, $bwFun3) === false) {
+    moveTo($goal[$y][0], 0, $y, $board, $result, $bwFun1);
+    if (moveTo($goal[$y][2], 1, $y, $board, $result, $bwFun1) === false) {
         return false;
     }
-    if (moveTo($goal[$y][0], 1, $y, $board, $result, $bwFun3) === false) {
+    if (moveTo($goal[$y][3], 2, $y, $board, $result, $bwFun1) === false) {
         return false;
     }
-    if (moveSpaceTo(0, $y, $board, $bwFun3(0, $y), $result) === false) {
+    if (moveTo2($goal[$y][1], 1, $y + 1, $board, $result, $bwFun2) === false) {
         return false;
     }
-    list($sx, $sy) = [0, $y];
-    $moves = [[1, 0], [1, 0], [1, 0], [0, 1]];
+    if (moveSpaceTo(3, $y, $board, $bwFun3(3, $y), $result) === false) {
+        return false;
+    }
+    list($sx, $sy) = [3, $y];
+    $moves = [[-1, 0], [-1, 0], [0, 1]];
     foreach ($moves as $m) {
         step($sx, $sy, $m, $board, $result);
     }
 
     return [$result, $board];
+}
+
+function dirLR4($y, $board, $goal)
+{
+    $bwFun1 = function ($x, $y) {
+        return buildWallsUL($x, $y);
+    };
+
+    $bwFun2 = function ($x, $y) {
+        return buildWallsUL(3, $y - 1);
+    };
+
+    $bwFun3 = function ($x, $y) {
+        $walls = buildWallsUL($x, $y);
+        $walls[$y + 1][2] = 1;
+        return $walls;
+    };
+
+    $result = [];
+    moveTo($goal[$y][0], 0, $y, $board, $result, $bwFun1);
+    if (moveTo($goal[$y][1], 1, $y, $board, $result, $bwFun1) === false) {
+        return false;
+    }
+    if (moveTo($goal[$y][3], 2, $y, $board, $result, $bwFun1) === false) {
+        return false;
+    }
+    if (moveTo2($goal[$y][2], 2, $y + 1, $board, $result, $bwFun2) === false) {
+        return false;
+    }
+    if (moveSpaceTo(3, $y, $board, $bwFun3(3, $y), $result) === false) {
+        return false;
+    }
+    list($sx, $sy) = [3, $y];
+    $moves = [[-1, 0], [0, 1]];
+    foreach ($moves as $m) {
+        step($sx, $sy, $m, $board, $result);
+    }
+
+    return [$result, $board];
+}
+
+function dirRL2($y, $board, $goal)
+{
+    $board = flipLR($board);
+    $goal = flipLR($goal);
+    if (($res = dirLR2($y, $board, $goal)) === false) {
+        return false;
+    }
+    return [$res[0], flipLR($res[1])];
+}
+
+function dirRL3($y, $board, $goal)
+{
+    $board = flipLR($board);
+    $goal = flipLR($goal);
+    if (($res = dirLR3($y, $board, $goal)) === false) {
+        return false;
+    }
+    return [$res[0], flipLR($res[1])];
+}
+
+function dirRL4($y, $board, $goal)
+{
+    $board = flipLR($board);
+    $goal = flipLR($goal);
+    if (($res = dirLR4($y, $board, $goal)) === false) {
+        return false;
+    }
+    return [$res[0], flipLR($res[1])];
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -499,6 +598,15 @@ function writeResult($result)
     foreach ($result as $n) {
         echo $n . "\n";
     }
+}
+
+//
+// Array utilities
+//
+
+function flipLR(array $arrays)
+{
+    return array_map('array_reverse', $arrays);
 }
 
 function cartesianProduct(array $arrays)
