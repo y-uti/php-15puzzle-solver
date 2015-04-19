@@ -17,7 +17,7 @@ function main()
         tryNext($p, [0, 1], 'U', $board, $queue, $result);
     }
 
-    echo base64_encode(packString($result)) . "\n";
+    echo base64_encode(gzencode(packString($result))) . "\n";
 }
 
 function tryNext($curr, $d, $c, $board, &$queue, &$result)

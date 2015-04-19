@@ -2,12 +2,16 @@
 
 function main()
 {
-    $result = str_repeat(' ', 12 * 11 * 10 * 9 * 8);
+    $result = str_repeat(' ', 16 * 15 * 14 * 13);
 
     $queue = [];
     $board = array_fill(0, 4, array_fill(0, 4, -1));
-    $board[1] = [5, 6, 7, 8];
-    foreach (range(2, 3) as $sy) {
+    $board[0] = [1, 2, 3, 0];
+    $encnum = encode($board);
+    $result[$encnum] = 'S';
+    $queue[] = $encnum;
+    $board[0][3] = -1;
+    foreach (range(1, 3) as $sy) {
         foreach (range(0, 3) as $sx) {
             $board[$sy][$sx] = 0;
             $encnum = encode($board);
@@ -34,7 +38,7 @@ function tryNext($curr, $d, $c, $board, &$queue, &$result)
 {
     list($x, $y) = $curr;
     list($dx, $dy) = $d;
-    if (0 <= $x + $dx && $x + $dx <= 3 && 1 <= $y + $dy && $y + $dy <= 3) {
+    if (0 <= $x + $dx && $x + $dx <= 3 && 0 <= $y + $dy && $y + $dy <= 3) {
         $next = step($curr, $d, $board);
         $nenc = encode($next);
         if ($result[$nenc] == ' ') {
@@ -46,10 +50,10 @@ function tryNext($curr, $d, $c, $board, &$queue, &$result)
 
 function encode($board)
 {
-    $numbers = [5, 6, 7, 8, 0];
+    $numbers = [1, 2, 3, 0];
 
     $encnum = 0;
-    $cells = range(4, 15);
+    $cells = range(0, 15);
     $scale = 1;
     foreach ($numbers as $n) {
         list($x, $y) = locationOf($n, $board);
@@ -65,10 +69,10 @@ function encode($board)
 
 function decode($encnum)
 {
-    $numbers = [5, 6, 7, 8, 0];
+    $numbers = [1, 2, 3, 0];
 
     $board = array_fill(0, 4, array_fill(0, 4, -1));
-    $cells = range(4, 15);
+    $cells = range(0, 15);
     foreach ($numbers as $n) {
         $i = $encnum % count($cells);
         $c = $cells[$i];
