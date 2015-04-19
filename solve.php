@@ -13,35 +13,45 @@ function main()
 
 // function main()
 // {
-//     while (true) {
-//         $board = randomBoard();
-//         $resultUD = solveUD($board);
-//         $resultLR = solveLR($board);
-//     }
+//     $board = randomBoard();
+//     $resultUD = solveUD($board);
+//     $resultLR = solveLR($board);
 // }
 
-function randomBoard()
-{
-    $board = [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12],
-        [13, 14, 15, 0],
-    ];
+// function randomBoard()
+// {
+//     $board = [
+//         [1, 2, 3, 4],
+//         [5, 6, 7, 8],
+//         [9, 10, 11, 12],
+//         [13, 14, 15, 0],
+//     ];
 
-    for ($i = 0; $i < 1000; ++$i) {
-        list($x, $y) = locationOf(0, $board);
-        $cands = [];
-        if ($x != 0) $cands[] = [-1, 0];
-        if ($x != 3) $cands[] = [1, 0];
-        if ($y != 0) $cands[] = [0, -1];
-        if ($y != 3) $cands[] = [0, 1];
-        $r = [];
-        step($x, $y, $cands[rand() % count($cands)], $board, $r);
-    }
+//     for ($i = 0; $i < 1000; ++$i) {
+//         list($x, $y) = locationOf(0, $board);
+//         $cands = [];
+//         if ($x != 0) {
+//             $cands[] = [-1, 0];
+//         }
 
-    return $board;
-}
+//         if ($x != 3) {
+//             $cands[] = [1, 0];
+//         }
+
+//         if ($y != 0) {
+//             $cands[] = [0, -1];
+//         }
+
+//         if ($y != 3) {
+//             $cands[] = [0, 1];
+//         }
+
+//         $r = [];
+//         step($x, $y, $cands[rand() % count($cands)], $board, $r);
+//     }
+
+//     return $board;
+// }
 
 function readBoard()
 {
@@ -129,10 +139,8 @@ function solve($board, $goal)
             }
         }
         if ($r !== false) {
-            // pathCompression($r);
             // echo 'Length = ' . count($r) . "\n";
             // printBoard($b);
-
             if ($best === false || count($r) < count($best)) {
                 $best = $r;
             }
@@ -141,18 +149,6 @@ function solve($board, $goal)
 
     return $best;
 }
-
-// function pathCompression(&$r)
-// {
-//     $i = 0;
-//     while ($i < count($r) - 1) {
-//         if ($r[$i] == $r[$i + 1]) {
-//             array_splice($r, $i, 2);
-//         } else {
-//             ++$i;
-//         }
-//     }
-// }
 
 //////////////////////////////////////////////////////////////////////
 
@@ -200,15 +196,15 @@ function dirLRandPackR($y, $board, $goal)
     moveTo($goal[$y][0], 0, $y, $board, $result, $bwFun);
     moveTo($goal[$y][1], 1, $y, $board, $result, $bwFun);
     moveTo($goal[$y][2], 2, $y, $board, $result, $bwFun);
-    fixRow($goal[$y][3], 3, $y, $board, $result, $bwFun);
+    fixRow($goal[$y][3], 3, $y, $board, $result);
 
     return [$result, $board];
 }
 
-function fixRow($n, $tx, $ty, &$board, &$result, $buildWallsFun)
+function fixRow($n, $tx, $ty, &$board, &$result)
 {
-    $bwFunFix = function ($x, $y) use ($buildWallsFun) {
-        return $buildWallsFun($x, $y - 2);
+    $bwFun = function ($x, $y) {
+        return buildWallsUL($x, $y - 2);
     };
 
     list($sx, $sy) = locationOf(0, $board);
@@ -216,22 +212,22 @@ function fixRow($n, $tx, $ty, &$board, &$result, $buildWallsFun)
         step($sx, $sy, [0, 1], $board, $result);
     }
     if ($board[$ty][$tx] != $n) {
-        moveTo($n, $tx, $ty + 2, $board, $result, $bwFunFix);
-        $walls = $buildWallsFun($tx, $ty);
+        moveTo($n, $tx, $ty + 2, $board, $result, $bwFun);
+        $walls = buildWallsUL($tx, $ty);
         $walls[$ty + 2][$tx] = 1;
         if (moveSpaceTo($tx, $ty, $board, $walls, $result) === false) {
             return false;
         }
         list($sx, $sy) = [$tx, $ty];
         $moves = [
-            [$tx == 3 ? -1 : 1, 0],
+            [-1, 0],
             [0, 1],
-            [$tx == 3 ? 1 : -1, 0],
+            [1, 0],
             [0, 1],
-            [$tx == 3 ? -1 : 1, 0],
+            [-1, 0],
             [0, -1],
             [0, -1],
-            [$tx == 3 ? 1 : -1, 0],
+            [1, 0],
             [0, 1],
         ];
         foreach ($moves as $m) {
