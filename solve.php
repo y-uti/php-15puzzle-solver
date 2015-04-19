@@ -88,59 +88,24 @@ function solve($board, $goal)
 {
     $strategies = [];
 
-    $strategies[] = [
-        function ($b) use ($goal) {
-            return dirLRandPackR(0, $b, $goal);
-        },
-        function ($b) use ($goal) {
-            return dirRLandPackL(0, $b, $goal);
-        },
-        function ($b) use ($goal) {
-            return dirLR2(0, $b, $goal);
-        },
-        function ($b) use ($goal) {
-            return dirRL2(0, $b, $goal);
-        },
-        function ($b) use ($goal) {
-            return dirLR3(0, $b, $goal);
-        },
-        function ($b) use ($goal) {
-            return dirRL3(0, $b, $goal);
-        },
-        function ($b) use ($goal) {
-            return dirLR4(0, $b, $goal);
-        },
-        function ($b) use ($goal) {
-            return dirRL4(0, $b, $goal);
-        },
+    $strategiesForUpperTwoRows = [
+        'dirLRandPackR',
+        'dirLR2',
+        'dirLR3',
+        'dirLR4',
     ];
 
-    $strategies[] = [
-        function ($b) use ($goal) {
-            return dirLRandPackR(1, $b, $goal);
-        },
-        function ($b) use ($goal) {
-            return dirRLandPackL(1, $b, $goal);
-        },
-        function ($b) use ($goal) {
-            return dirLR2(1, $b, $goal);
-        },
-        function ($b) use ($goal) {
-            return dirRL2(1, $b, $goal);
-        },
-        function ($b) use ($goal) {
-            return dirLR3(1, $b, $goal);
-        },
-        function ($b) use ($goal) {
-            return dirRL3(1, $b, $goal);
-        },
-        function ($b) use ($goal) {
-            return dirLR4(1, $b, $goal);
-        },
-        function ($b) use ($goal) {
-            return dirRL4(1, $b, $goal);
-        },
-    ];
+    foreach (range(0, 1) as $y) {
+        $strategies[$y] = [];
+        foreach ($strategiesForUpperTwoRows as $s) {
+            $strategies[$y][] = function ($b) use ($y, $s, $goal) {
+                return call_user_func($s, $y, $b, $goal);
+            };
+            $strategies[$y][] = function ($b) use ($y, $s, $goal) {
+                return flipStrategyDirection($s, $y, $b, $goal);
+            };
+        }
+    }
 
     $strategies[] = [
         function ($b) use ($goal) {
@@ -238,16 +203,6 @@ function dirLRandPackR($y, $board, $goal)
     fixRow($goal[$y][3], 3, $y, $board, $result, $bwFun);
 
     return [$result, $board];
-}
-
-function dirRLandPackL($y, $board, $goal)
-{
-    $board = flipLR($board);
-    $goal = flipLR($goal);
-    if (($res = dirLRandPackR($y, $board, $goal)) === false) {
-        return false;
-    }
-    return [$res[0], flipLR($res[1])];
 }
 
 function fixRow($n, $tx, $ty, &$board, &$result, $buildWallsFun)
@@ -400,34 +355,13 @@ function dirLR4($y, $board, $goal)
     return [$result, $board];
 }
 
-function dirRL2($y, $board, $goal)
+function flipStrategyDirection($strategy, $y, $board, $goal)
 {
     $board = flipLR($board);
     $goal = flipLR($goal);
-    if (($res = dirLR2($y, $board, $goal)) === false) {
-        return false;
-    }
-    return [$res[0], flipLR($res[1])];
-}
+    $result = call_user_func($strategy, $y, $board, $goal);
 
-function dirRL3($y, $board, $goal)
-{
-    $board = flipLR($board);
-    $goal = flipLR($goal);
-    if (($res = dirLR3($y, $board, $goal)) === false) {
-        return false;
-    }
-    return [$res[0], flipLR($res[1])];
-}
-
-function dirRL4($y, $board, $goal)
-{
-    $board = flipLR($board);
-    $goal = flipLR($goal);
-    if (($res = dirLR4($y, $board, $goal)) === false) {
-        return false;
-    }
-    return [$res[0], flipLR($res[1])];
+    return $result === false ? false : [$result[0], flipLR($result[1])];
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -497,21 +431,6 @@ function buildWallsUL($x, $y)
     }
     // array_splice($walls, 0, $y, array_fill(0, $y, [1, 1, 1, 1]));
     // array_splice($walls[$y], 0, $x, array_fill(0, $x, 1));
-
-    return $walls;
-}
-
-function buildWallsUR($x, $y)
-{
-    $walls = emptyWalls();
-    for ($i = 0; $i < $y; ++$i) {
-        $walls[$i] = [1, 1, 1, 1];
-    }
-    for ($i = 3; $i > $x; --$i) {
-        $walls[$y][$i] = 1;
-    }
-    // array_splice($walls, 0, $y, array_fill(0, $y, [1, 1, 1, 1]));
-    // array_splice($walls[$y], $x + 1, 3 - $x, array_fill(0, 3 - $x, 1));
 
     return $walls;
 }
