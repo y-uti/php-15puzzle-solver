@@ -11,6 +11,48 @@ function main()
     writeResult($result);
 }
 
+// function main()
+// {
+//     $board = randomBoard();
+//     $resultUD = solveUD($board);
+//     $resultLR = solveLR($board);
+// }
+
+// function randomBoard()
+// {
+//     $board = [
+//         [1, 2, 3, 4],
+//         [5, 6, 7, 8],
+//         [9, 10, 11, 12],
+//         [13, 14, 15, 0],
+//     ];
+
+//     for ($i = 0; $i < 1000; ++$i) {
+//         list($x, $y) = locationOf(0, $board);
+//         $cands = [];
+//         if ($x != 0) {
+//             $cands[] = [-1, 0];
+//         }
+
+//         if ($x != 3) {
+//             $cands[] = [1, 0];
+//         }
+
+//         if ($y != 0) {
+//             $cands[] = [0, -1];
+//         }
+
+//         if ($y != 3) {
+//             $cands[] = [0, 1];
+//         }
+
+//         $r = [];
+//         step($x, $y, $cands[rand() % count($cands)], $board, $r);
+//     }
+
+//     return $board;
+// }
+
 function readBoard()
 {
     $board = [];
@@ -93,7 +135,7 @@ function solve($board, $goal)
         foreach ($chain as $s) {
             $sres = $s($b);
             if ($sres !== false) {
-                list($rnext, $b) = $s($b);
+                list($rnext, $b) = $sres;
                 $r = array_merge($r, $rnext);
             } else {
                 $r = false;
