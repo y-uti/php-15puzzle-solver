@@ -440,7 +440,6 @@ function flipStrategyDirection($strategy, $y, $board, $goal)
     $goal = flipLR($goal);
     list($result, $board) = call_user_func($strategy, $y, $board, $goal);
     return [$result, flipLR($board)];
-    // return $result === false ? false : [$result[0], flipLR($result[1])];
 }
 
 //////////////////////////////////////////////////////////////////////
