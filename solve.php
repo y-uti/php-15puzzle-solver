@@ -347,7 +347,7 @@ function dirLR2($y, $board, $goal)
         moveTo($goal[$y][2], 1, $y, $board, $result, $bwFun1);
         moveTo($goal[$y][3], 2, $y, $board, $result, $bwFun1);
     }
-    moveTo2($goal[$y][0], 0, $y + 1, $board, $result, $bwFun2);
+    moveTo($goal[$y][0], 0, $y + 1, $board, $result, $bwFun2);
     moveSpaceTo(3, $y, $board, $bwFun3(3, $y), $result);
     list($sx, $sy) = [3, $y];
     $moves = [[-1, 0], [-1, 0], [-1, 0], [0, 1]];
@@ -385,7 +385,7 @@ function dirLR3($y, $board, $goal)
         moveTo($goal[$y][2], 1, $y, $board, $result, $bwFun1);
         moveTo($goal[$y][3], 2, $y, $board, $result, $bwFun1);
     }
-    moveTo2($goal[$y][1], 1, $y + 1, $board, $result, $bwFun2);
+    moveTo($goal[$y][1], 1, $y + 1, $board, $result, $bwFun2);
     moveSpaceTo(3, $y, $board, $bwFun3(3, $y), $result);
     list($sx, $sy) = [3, $y];
     $moves = [[-1, 0], [-1, 0], [0, 1]];
@@ -423,7 +423,7 @@ function dirLR4($y, $board, $goal)
         moveTo($goal[$y][1], 1, $y, $board, $result, $bwFun1);
         moveTo($goal[$y][3], 2, $y, $board, $result, $bwFun1);
     }
-    moveTo2($goal[$y][2], 2, $y + 1, $board, $result, $bwFun2);
+    moveTo($goal[$y][2], 2, $y + 1, $board, $result, $bwFun2);
     moveSpaceTo(3, $y, $board, $bwFun3(3, $y), $result);
     list($sx, $sy) = [3, $y];
     $moves = [[-1, 0], [0, 1]];
@@ -447,46 +447,48 @@ function flipStrategyDirection($strategy, $y, $board, $goal)
 function moveTo($n, $tx, $ty, &$board, &$result, $buildWallsFun)
 {
     list($x, $y) = locationOf($n, $board);
-    while ($x != $tx) {
-        $dx = $x < $tx ? 1 : -1;
-        $sx = $x + $dx;
-        $walls = $buildWallsFun($tx, $ty);
-        $walls[$y][$x] = 1;
-        moveSpaceTo($sx, $y, $board, $walls, $result);
-        step($sx, $y, [-$dx, 0], $board, $result);
+    while ($x != $tx || $y != $ty) {
+        $cands = [];
+        if ($x != $tx) {
+            $dx = $x < $tx ? 1 : -1;
+            $sx = $x + $dx;
+            $walls = $buildWallsFun($tx, $ty);
+            $walls[$y][$x] = 1;
+            $bx = $board;
+            $rx = [];
+            try {
+                moveSpaceTo($sx, $y, $bx, $walls, $rx);
+                step($sx, $y, [-$dx, 0], $bx, $rx);
+                $cands[] = [$dx, 0, $rx, $bx];
+            } catch (PathNotFoundException $e) {
+            }
+        }
+        if ($y != $ty) {
+            $dy = $y < $ty ? 1 : -1;
+            $sy = $y + $dy;
+            $walls = $buildWallsFun($tx, $ty);
+            $walls[$y][$x] = 1;
+            $by = $board;
+            $ry = [];
+            try {
+                moveSpaceTo($x, $sy, $by, $walls, $ry);
+                step($x, $sy, [0, -$dy], $by, $ry);
+                $cands[] = [0, $dy, $ry, $by];
+            } catch (PathNotFoundException $e) {
+            }
+        }
+        if (count($cands) == 0) {
+            throw new PathNotFoundException();
+        } elseif (count($cands) == 1) {
+            list($dx, $dy, $r, $b) = $cands[0];
+        } else {
+            $i = count($cands[0][2]) < count($cands[1][2]) ? 0 : 1;
+            list($dx, $dy, $r, $b) = $cands[$i];
+        }
         $x += $dx;
-    }
-    while ($y != $ty) {
-        $dy = $y < $ty ? 1 : -1;
-        $sy = $y + $dy;
-        $walls = $buildWallsFun($tx, $ty);
-        $walls[$y][$x] = 1;
-        moveSpaceTo($x, $sy, $board, $walls, $result);
-        step($x, $sy, [0, -$dy], $board, $result);
         $y += $dy;
-    }
-}
-
-function moveTo2($n, $tx, $ty, &$board, &$result, $buildWallsFun)
-{
-    list($x, $y) = locationOf($n, $board);
-    while ($y != $ty) {
-        $dy = $y < $ty ? 1 : -1;
-        $sy = $y + $dy;
-        $walls = $buildWallsFun($tx, $ty);
-        $walls[$y][$x] = 1;
-        moveSpaceTo($x, $sy, $board, $walls, $result);
-        step($x, $sy, [0, -$dy], $board, $result);
-        $y += $dy;
-    }
-    while ($x != $tx) {
-        $dx = $x < $tx ? 1 : -1;
-        $sx = $x + $dx;
-        $walls = $buildWallsFun($tx, $ty);
-        $walls[$y][$x] = 1;
-        moveSpaceTo($sx, $y, $board, $walls, $result);
-        step($sx, $y, [-$dx, 0], $board, $result);
-        $x += $dx;
+        $result = array_merge($result, $r);
+        $board = $b;
     }
 }
 
@@ -512,6 +514,10 @@ function emptyWalls()
 
 function moveSpaceTo($tx, $ty, &$board, $walls, &$result)
 {
+    if ($walls[$ty][$tx] !== 0) {
+        throw new PathNotFoundException();
+    }
+
     list($sx, $sy) = locationOf(0, $board);
 
     $queue = [[$tx, $ty]];
