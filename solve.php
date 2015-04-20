@@ -265,23 +265,33 @@ function encodeForSecondRowSolver($board, $numbers)
 
 //////////////////////////////////////////////////////////////////////
 
-function dirLRandPackR($y, $board, $goal)
+function moveThreePieces($y, $numbers, $board)
 {
-    $bwFun = function ($x, $y) {
-        return buildWallsUL($x, $y);
-    };
-
     if ($y == 0) {
         list($result, $board) = optimalSolverForFirstThreeNumbers(
             $board,
-            [$goal[0][0], $goal[0][1], $goal[0][2]]
+            $numbers
         );
     } else {
+        $bwFun = function ($x, $y) {
+            return buildWallsUL($x, $y);
+        };
         $result = [];
-        moveTo($goal[$y][0], 0, $y, $board, $result, $bwFun);
-        moveTo($goal[$y][1], 1, $y, $board, $result, $bwFun);
-        moveTo($goal[$y][2], 2, $y, $board, $result, $bwFun);
+        foreach (range(0, 2) as $x) {
+            moveTo($numbers[$x], $x, $y, $board, $result, $bwFun);
+        }
     }
+
+    return [$result, $board];
+}
+
+function dirLRandPackR($y, $board, $goal)
+{
+    list($result, $board) = moveThreePieces(
+        $y,
+        [$goal[$y][0], $goal[$y][1], $goal[$y][2]],
+        $board
+    );
     fixRow($goal[$y][3], 3, $y, $board, $result);
 
     return [$result, $board];
@@ -320,118 +330,48 @@ function fixRow($n, $tx, $ty, &$board, &$result)
     }
 }
 
-function dirLR2($y, $board, $goal)
+function dirLRk($k, $y, $board, $goal)
 {
-    $bwFun1 = function ($x, $y) {
-        return buildWallsUL($x, $y);
-    };
-
     $bwFun2 = function ($x, $y) {
         return buildWallsUL(3, $y - 1);
     };
 
-    $bwFun3 = function ($x, $y) {
+    $bwFun3 = function ($x, $y) use ($k) {
         $walls = buildWallsUL($x, $y);
-        $walls[$y + 1][0] = 1;
+        $walls[$y + 1][$k] = 1;
         return $walls;
     };
 
-    if ($y == 0) {
-        list($result, $board) = optimalSolverForFirstThreeNumbers(
-            $board,
-            [$goal[0][1], $goal[0][2], $goal[0][3]]
-        );
-    } else {
-        $result = [];
-        moveTo($goal[$y][1], 0, $y, $board, $result, $bwFun1);
-        moveTo($goal[$y][2], 1, $y, $board, $result, $bwFun1);
-        moveTo($goal[$y][3], 2, $y, $board, $result, $bwFun1);
+    $numbers = [];
+    foreach (range(0, 2) as $i) {
+        $numbers[$i] = $goal[$y][$i + ($i < $k ? 0 : 1)];
     }
-    moveTo($goal[$y][0], 0, $y + 1, $board, $result, $bwFun2);
+    list($result, $board) = moveThreePieces($y, $numbers, $board);
+
+    moveTo($goal[$y][$k], $k, $y + 1, $board, $result, $bwFun2);
     moveSpaceTo(3, $y, $board, $bwFun3(3, $y), $result);
     list($sx, $sy) = [3, $y];
-    $moves = [[-1, 0], [-1, 0], [-1, 0], [0, 1]];
-    foreach ($moves as $m) {
-        step($sx, $sy, $m, $board, $result);
+    for ($i = 0; $i < 3 - $k; ++$i) {
+        step($sx, $sy, [-1, 0], $board, $result);
     }
+    step($sx, $sy, [0, 1], $board, $result);
 
     return [$result, $board];
+}
+
+function dirLR2($y, $board, $goal)
+{
+    return dirLRk(0, $y, $board, $goal);
 }
 
 function dirLR3($y, $board, $goal)
 {
-    $bwFun1 = function ($x, $y) {
-        return buildWallsUL($x, $y);
-    };
-
-    $bwFun2 = function ($x, $y) {
-        return buildWallsUL(3, $y - 1);
-    };
-
-    $bwFun3 = function ($x, $y) {
-        $walls = buildWallsUL($x, $y);
-        $walls[$y + 1][1] = 1;
-        return $walls;
-    };
-
-    if ($y == 0) {
-        list($result, $board) = optimalSolverForFirstThreeNumbers(
-            $board,
-            [$goal[0][0], $goal[0][2], $goal[0][3]]
-        );
-    } else {
-        $result = [];
-        moveTo($goal[$y][0], 0, $y, $board, $result, $bwFun1);
-        moveTo($goal[$y][2], 1, $y, $board, $result, $bwFun1);
-        moveTo($goal[$y][3], 2, $y, $board, $result, $bwFun1);
-    }
-    moveTo($goal[$y][1], 1, $y + 1, $board, $result, $bwFun2);
-    moveSpaceTo(3, $y, $board, $bwFun3(3, $y), $result);
-    list($sx, $sy) = [3, $y];
-    $moves = [[-1, 0], [-1, 0], [0, 1]];
-    foreach ($moves as $m) {
-        step($sx, $sy, $m, $board, $result);
-    }
-
-    return [$result, $board];
+    return dirLRk(1, $y, $board, $goal);
 }
 
 function dirLR4($y, $board, $goal)
 {
-    $bwFun1 = function ($x, $y) {
-        return buildWallsUL($x, $y);
-    };
-
-    $bwFun2 = function ($x, $y) {
-        return buildWallsUL(3, $y - 1);
-    };
-
-    $bwFun3 = function ($x, $y) {
-        $walls = buildWallsUL($x, $y);
-        $walls[$y + 1][2] = 1;
-        return $walls;
-    };
-
-    if ($y == 0) {
-        list($result, $board) = optimalSolverForFirstThreeNumbers(
-            $board,
-            [$goal[0][0], $goal[0][1], $goal[0][3]]
-        );
-    } else {
-        $result = [];
-        moveTo($goal[$y][0], 0, $y, $board, $result, $bwFun1);
-        moveTo($goal[$y][1], 1, $y, $board, $result, $bwFun1);
-        moveTo($goal[$y][3], 2, $y, $board, $result, $bwFun1);
-    }
-    moveTo($goal[$y][2], 2, $y + 1, $board, $result, $bwFun2);
-    moveSpaceTo(3, $y, $board, $bwFun3(3, $y), $result);
-    list($sx, $sy) = [3, $y];
-    $moves = [[-1, 0], [0, 1]];
-    foreach ($moves as $m) {
-        step($sx, $sy, $m, $board, $result);
-    }
-
-    return [$result, $board];
+    return dirLRk(2, $y, $board, $goal);
 }
 
 function flipStrategyDirection($strategy, $y, $board, $goal)
