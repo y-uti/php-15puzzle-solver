@@ -4,12 +4,11 @@ function main()
 {
     $result = str_repeat(' ', 8 * 7 * 6 * 5 * 4 * 3 * 2 * 1);
     $result[0] = 'S';
-    $board = array_fill(0, 4, array_fill(0, 4, -1));
-
     $queue = [0];
+
     while ($queue) {
         $encnum = array_shift($queue);
-        decode($encnum, $board);
+        $board = decode($encnum);
         $p = locationOf(0, $board);
         tryNext($p, [0, -1], 'D', $board, $queue, $result);
         tryNext($p, [-1, 0], 'R', $board, $queue, $result);
@@ -34,53 +33,42 @@ function tryNext($curr, $d, $c, $board, &$queue, &$result)
     }
 }
 
-function test()
-{
-    $board = [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [10, 14, 13, 9],
-        [15, 0, 12, 11],
-    ];
-
-    $encnum = encode($board);
-    echo $encnum . "\n";
-
-    $board2 = array_fill(0, 4, array_fill(0, 4, 0));
-    decode($encnum, $board2);
-
-    echo json_encode($board2) . "\n";
-}
-
 function encode($board)
 {
-    $encnum = 0;
     $numbers = [9, 10, 11, 12, 13, 14, 15, 0];
+
+    $encnum = 0;
+    $cells = range(8, 15);
     $scale = 1;
-    foreach (range(2, 3) as $r) {
-        foreach (range(0, 3) as $c) {
-            $n = $board[$r][$c];
-            $i = array_search($n, $numbers);
-            $encnum += $i * $scale;
-            $scale *= count($numbers);
-            array_splice($numbers, $i, 1);
-        }
+    foreach ($numbers as $n) {
+        list($x, $y) = locationOf($n, $board);
+        $c = $y * 4 + $x;
+        $i = array_search($c, $cells);
+        $encnum += $i * $scale;
+        $scale *= count($cells);
+        array_splice($cells, $i, 1);
     }
+
     return $encnum;
 }
 
-function decode($encnum, &$board)
+function decode($encnum)
 {
     $numbers = [9, 10, 11, 12, 13, 14, 15, 0];
-    foreach (range(2, 3) as $r) {
-        foreach (range(0, 3) as $c) {
-            $i = $encnum % count($numbers);
-            $n = $numbers[$i];
-            $board[$r][$c] = $n;
-            $encnum = ($encnum - $i) / count($numbers);
-            array_splice($numbers, $i, 1);
-        }
+
+    $board = array_fill(0, 4, array_fill(0, 4, -1));
+    $cells = range(8, 15);
+    foreach ($numbers as $n) {
+        $i = $encnum % count($cells);
+        $c = $cells[$i];
+        $x = $c % 4;
+        $y = ($c - $x) / 4;
+        $board[$y][$x] = $n;
+        $encnum = ($encnum - $i) / count($cells);
+        array_splice($cells, $i, 1);
     }
+
+    return $board;
 }
 
 function locationOf($n, $board)
