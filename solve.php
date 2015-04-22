@@ -7,60 +7,24 @@ class PathNotFoundException extends Exception
 function main()
 {
     $board = readBoard();
-    // $board = randomBoard();
 
     $resultUD = solveUD($board);
     $resultLR = solveLR($board);
+
     $result = count($resultUD) < count($resultLR) ? $resultUD : $resultLR;
     writeResult($result);
 }
-
-// function randomBoard()
-// {
-//     $board = [
-//         [1, 2, 3, 4],
-//         [5, 6, 7, 8],
-//         [9, 10, 11, 12],
-//         [13, 14, 15, 0],
-//     ];
-
-//     for ($i = 0; $i < 1000; ++$i) {
-//         list($x, $y) = locationOf(0, $board);
-//         $cands = [];
-//         if ($x != 0) {
-//             $cands[] = [-1, 0];
-//         }
-
-//         if ($x != 3) {
-//             $cands[] = [1, 0];
-//         }
-
-//         if ($y != 0) {
-//             $cands[] = [0, -1];
-//         }
-
-//         if ($y != 3) {
-//             $cands[] = [0, 1];
-//         }
-
-//         $r = [];
-//         step($x, $y, $cands[rand() % count($cands)], $board, $r);
-//     }
-
-//     return $board;
-// }
 
 function readBoard()
 {
     $board = [];
     $lines = file('php://stdin', FILE_IGNORE_NEW_LINES);
     foreach ($lines as $l) {
-        $b = explode(' ', $l);
-        foreach ($b as &$e) {
-            $e = $e == '*' ? 0 : intval($e);
-        }
-        $board[] = $b;
+        $board[] = array_map(function ($e) {
+            return $e == '*' ? 0 : intval($e);
+        }, explode(' ', $l));
     }
+
     return $board;
 }
 
@@ -193,7 +157,6 @@ function optimalSolverForFirstThreeNumbers($board, $numbers)
 {
     global $dataForFirstThreeNumbersSolver;
 
-    $encodeFun = 'encodeFirstRow';
     $goalFun = function ($encnum) {
         return $encnum % 3360 == 0;
     };
@@ -202,7 +165,7 @@ function optimalSolverForFirstThreeNumbers($board, $numbers)
         $board,
         $numbers,
         $dataForFirstThreeNumbersSolver,
-        $encodeFun,
+        0,
         $goalFun
     );
 }
@@ -213,7 +176,6 @@ function optimalSolverForFirstTwoAndOneNumbers($board, $numbers)
 {
     global $dataForFirstTwoAndOneNumbersSolver;
 
-    $encodeFun = 'encodeFirstRow';
     $goalFun = function ($encnum) {
         return $encnum % 3360 == 240;
     };
@@ -222,7 +184,45 @@ function optimalSolverForFirstTwoAndOneNumbers($board, $numbers)
         $board,
         $numbers,
         $dataForFirstTwoAndOneNumbersSolver,
-        $encodeFun,
+        0,
+        $goalFun
+    );
+}
+
+$dataForSecondThreeNumbersSolver = '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';
+$dataForSecondThreeNumbersSolver = gzdecode(base64_decode($dataForSecondThreeNumbersSolver));
+function optimalSolverForSecondThreeNumbers($board, $numbers)
+{
+    global $dataForSecondThreeNumbersSolver;
+
+    $goalFun = function ($encnum) {
+        return $encnum % 1320 == 0;
+    };
+
+    return optimalSolver(
+        $board,
+        $numbers,
+        $dataForSecondThreeNumbersSolver,
+        1,
+        $goalFun
+    );
+}
+
+$dataForSecondTwoAndOneNumbersSolver = 'H4sIAAAAAAAAA2VWXYgb1xW+mpWMKie1Nuw81PRhvGnKRm5o2tBCocES3YW+ZQRzvHXAKHlIoKXGD6liKG01klepqzZZm2bjOhA8kmOjPdejcSBjYy3yuLR5KQ1egy+BQFDykAfL7K5NrFV37NHtuSNTAhUfl2/ufOdnzjn37voAAUQH4cgRWFkpQ/wrvafWw5OHD4UcBOEDKb+O6Ov8asDlgMe/Nc/DOxw5jx5wj4+JEIJRgB3EO8jR416AsdKNBROrIJRIP75Gr7oeRySN96BLxpIjbXqXz3iDYDAxXONe7BbHA7XG4LDTfXCn23ug4soHXnQHt2LO+eYkh+FpSpWSHHg85Nck8juchy6GLkeSXbvDg6uUBaXIO2TUpQQonHrViWORuAuVrpSTHCjlSdw4RDgJ0QLRAtBK0he+vzgsi9M+gC+GPpT9/mJFCAZAAiTB69fUvlD1ngh65bIUwv9MBMPhtZ7rbvRcGW315FYUuaXIjSpBFA2iyO8PAwEYSXdzyw3Oj6Ko54bRWdyIjnputOnu9GQ/kBH2el6n44WR1+l58ku377ly5HkRBi59ZPClRHcVO10MVrd6HW9z7IXS25HeJmHL/wwDsfppz402um7fLW3I4eEBnkXsoWqii5RkRQwHPRlteO7WojeWw41fbchASu6517pK0Jci8nrSc2+7ntgayzV34Lmh544DV17e8IKdMBiE2HPR7a4GrhdJ7ExCnCUNWbWQ72pzu/HnosN3g6iB0ECMQTRAZIhXSicbPIm8gfwp5OdU2QUqAWBMsFKCNk+hA8b+eksJarFm4oEErb5kIDwh/tGX/jaqFiyu9EbUuEDx0WJweVOLTWrUrO2B31/xR9RT6ZeHfrnsj04H2zuZCrQqUOvL4DKdD+l/Iv1Kxe+f9kvgS/CDbQkyBHmNPJTRP4b+6EKvLFX9CdsKWAYsCyS3r4d+GfxjPX9IYl/pRxgMuxkRDwx5HtFcRH4AASU5WvNHFX90LBiGmiy1KqU4hzAY7vhnIeiS5zDwQ380Gl6Ru5yemWo+Yb8JS+7Mvotae222zZ9s8z1tnEVOfKbTW0E367ipnPtNp/MGYgb5YsQljnPIiVsXe+C4+jPP687qt1cvvtFGbHEr4svOuNPixHVYgTxkXz4889IRvXkR2ggNDhEfNse/fIsTz6afS6bvLhkylZ6iXlDlnwPxEIDIFPFK6Ym53dTNE8bulM2fpJLSIToMYxg24r7XRGnx7v7SmH9ydzdET1JVCZvUzUq5UYLZGJIPbuDn8txAngvbkxkQ8QpyTOjLVltNC2V7ocYdQT4F9mEs+kqmeIkE9LGN2f3na/ycLFFQjQR03vslpBMnIGuf1P2hpfu67VvV+9m/+Eu7Hk8uNVPJ7x/wfph7680ZW+iXhqD70/aPs/b9Z5cuNZzVXUU39fnRA070W3QtX4A/hLrQq5fA3n7NvppDd+bQVf320QNe9FzXhfoQ7Pu0WkT8+78L7ukNF04hfHH0wPHoD8s7MC/UjVwXVt237FOm7cMha8Y8bxVBf+9g7t3zM0YExsfZZx6ftntZ499vzOWS6Snr46kbiYdE/kn818/DXRc2HoebP9Bffsy6h/IhtXvqhjH+3mM8p00t9irwuVf6QsJXnv7Fz+TxUPLwYTOUzXAQ8e8+PDeKD7akY798u+/+Z6ndwgZ/9R7vNHmnRvd1GN8Ubi73E2xcRVQDk7b5wejclhNijROYts40YJpAbV3DW6wmaGdm6QN9yYeP/iqDEdOus4ypBJn1lhKss8ytbPXDaXuoX1+Rwb9QA8wAKg9Cw3Ul0K7r1S7YQ6he+Ww51FA08FYNBRLaoPTaDfC7qsL1RTqlmiYYilpNYO1mrX1TU8pbVt63CmWon64EIdN0ltHjJHUNGdOSFMKyX7GqvzHzhdeWP7WWsnDpR1AHmH8WCknTtuEXbraYmDZe+CmLcrsSuk/zcBfob0DhChQ+WKdm3Tu6eC9YvLeH2p1rtKDeh6GEegnqAdSlaf9e/vGhPDtWtT0uN7e9R5fF8uTKCL86EBq2i+82cXBWLpPmNks6LGnHq/Nqps2WkCVZIsnSs4LVbs5qJfUqXWVpm9YLmXb6ZJOlE8WfJ+i7WEMYmRceCZQHgwTsbeJGYt5g2s0TGZGbLdEmptuYiZGOBWlGGlXShupC7W1kjWbjfbSx9U4bDzboBmkrV45oocjhJIcmJUbkHdq3EoSCtY9pt+za3+1aqbhgLFgJoKCWcTDVThBPskJS1Xwuc51pU4wBY+uMCYcJxm6q5Nk6FHwoJKD+diVoxeOk0FbzIJRAW4f6GnxUgeqxuJsllinRilqphoowbY8M7so9IdRHUJXsOw7L2mzGISSz9spTDjMTiRnGsg5bsmczLfUqW1WabJUEL+ZiQTbBsidZI2HQB04EtBqG8pBrMjOXyBrMcE6kE7k5O7aNo8QAnQRkbhRos7FvLtN6R3dW9jqYcs7knAs5JxeHSGYpBzapP7NWmbnKrG8wE5MmTd4Z0PHMt5wzTzv23xIn3m8WwVgwE2CpSpIVhQArkTBTzPzTXMagMVjQT5nZU2CZ83oxmd0H+kvMPFTMmsWiAdY+sGzVJtVfhfl0ms0kWDI9PZ+Oa06YdHMfS5O3ycAkSF9I0sCU2o24C/M2M21GrvI2nYrpefqvp5qY1+mRkNuLjwQxSJDNk4D4I4GTRWVrVmMPjAR6LFBfoQQsN3fif+YTWFAFWKBaFUzlYS6HE1sViNbYijwkVR3sPD0aDXr8f7D8JISNuXYRUgtmCqwUI+R1KOgUAlQgGxZsxhoLUDXNKlj5+YVE0qyaefKQL5qpYlHP56fTeye55VW4fJ58EoEFIguTEK88fSgeBkPBUOuLOeqFNnlsn1Dn5b+Y5hfQmgsAAA==';
+$dataForSecondTwoAndOneNumbersSolver = gzdecode(base64_decode($dataForSecondTwoAndOneNumbersSolver));
+function optimalSolverForSecondTwoAndOneNumbers($board, $numbers)
+{
+    global $dataForSecondTwoAndOneNumbersSolver;
+
+    $goalFun = function ($encnum) {
+        return $encnum % 1320 == 132;
+    };
+
+    return optimalSolver(
+        $board,
+        $numbers,
+        $dataForSecondTwoAndOneNumbersSolver,
+        1,
         $goalFun
     );
 }
@@ -234,7 +234,6 @@ function optimalSolverForSecondRow($board, $goal)
     global $dataForSecondRowSolver;
 
     $numbers = $goal[1];
-    $encodeFun = 'encodeSecondRow';
     $goalFun = function ($encnum) {
         return $encnum % 11880 == 0;
     };
@@ -243,7 +242,7 @@ function optimalSolverForSecondRow($board, $goal)
         $board,
         $numbers,
         $dataForSecondRowSolver,
-        $encodeFun,
+        1,
         $goalFun
     );
 }
@@ -255,7 +254,6 @@ function optimalSolverForLowerTwoRows($board, $goal)
     global $dataForLowerTwoRowsSolver;
 
     $numbers = array_merge($goal[2], $goal[3]);
-    $encodeFun = 'encodeLowerTwoRows';
     $goalFun = function ($encnum) {
         return $encnum == 0;
     };
@@ -264,45 +262,32 @@ function optimalSolverForLowerTwoRows($board, $goal)
         $board,
         $numbers,
         $dataForLowerTwoRowsSolver,
-        $encodeFun,
+        2,
         $goalFun
     );
 }
 
-function encodeFirstRow($board, $numbers)
-{
-    return encode($board, $numbers, range(0, 15));
-}
-
-function encodeSecondRow($board, $numbers)
-{
-    return encode($board, $numbers, range(4, 15));
-}
-
-function encodeLowerTwoRows($board, $numbers)
-{
-    return encode($board, $numbers, range(8, 15));
-}
-
-function optimalSolver($board, $numbers, $data, $encodeFun, $goalFun)
+function optimalSolver($board, $numbers, $data, $encRow, $goalFun)
 {
     $dirs = [[0, -1], [-1, 0], [1, 0], [0, 1]];
     $numbers[] = 0;
 
     $result = [];
-    $encnum = $encodeFun($board, $numbers);
+    $encnum = encode($board, $numbers, $encRow);
     while (!$goalFun($encnum)) {
         list($x, $y) = locationOf(0, $board);
         $i = ord($data[intval($encnum / 4)]) / pow(4, $encnum % 4) % 4;
         step($x, $y, $dirs[$i], $board, $result);
-        $encnum = $encodeFun($board, $numbers);
+        $encnum = encode($board, $numbers, $encRow);
     }
 
     return [$result, $board];
 }
 
-function encode($board, $numbers, $cells)
+function encode($board, $numbers, $row)
 {
+    $cells = range($row * 4, 15);
+
     $encnum = 0;
     $scale = 1;
     foreach ($numbers as $n) {
@@ -321,45 +306,14 @@ function encode($board, $numbers, $cells)
 
 function moveThreePieces($y, $numbers, $board)
 {
-    if ($y == 0) {
-        list($result, $board) = optimalSolverForFirstThreeNumbers(
-            $board,
-            $numbers
-        );
-    } else {
-        $bwFun = function ($x, $y) {
-            return buildWallsUL($x, $y);
-        };
-        $result = [];
-        moveTo($numbers[0], 0, $y, $board, $result, $bwFun);
-        moveTo($numbers[1], 1, $y, $board, $result, $bwFun);
-        moveTo($numbers[2], 2, $y, $board, $result, $bwFun);
-    }
-
-    return [$result, $board];
+    $solver = $y == 0 ? 'optimalSolverForFirstThreeNumbers' : 'optimalSolverForSecondThreeNumbers';
+    return $solver($board, $numbers);
 }
 
 function moveTwoAndOnePieces($y, $numbers, $board)
 {
-    if ($y == 0) {
-        list($result, $board) = optimalSolverForFirstTwoAndOneNumbers(
-            $board,
-            $numbers
-        );
-    } else {
-        $bwFun1 = function ($x, $y) {
-            return buildWallsUL($x, $y);
-        };
-        $bwFun2 = function ($x, $y) {
-            return buildWallsUL(2, $y);
-        };
-        $result = [];
-        moveTo($numbers[0], 0, $y, $board, $result, $bwFun1);
-        moveTo($numbers[1], 1, $y, $board, $result, $bwFun1);
-        moveTo($numbers[2], 3, $y, $board, $result, $bwFun2);
-    }
-
-    return [$result, $board];
+    $solver = $y == 0 ? 'optimalSolverForFirstTwoAndOneNumbers' : 'optimalSolverForSecondTwoAndOneNumbers';
+    return $solver($board, $numbers);
 }
 
 function checkPiece($x, $y, $n, $board)
@@ -376,58 +330,49 @@ function checkPieceAndSolve($x, $y, $n, $board)
     try {
         return checkPiece($x, $y, $n, $board);
     } catch (PathNotFoundException $e) {
-        $result = [];
-        fixRow($n, $x, $y, $board, $result);
-        return [$result, $board];
+        return fixRow($n, $x, $y, $board);
     }
 }
 
-function finishRowForTwo($x, $y, $n, $board)
+function finishRow($x, $y, $n, $board, $k)
 {
     $result = [];
 
-    $bwFun = function ($xi, $yi) use ($y) {
-        $walls = buildWallsUL(2, $y);
-        $walls[$y][3] = 1;
+    $bwFun = function ($xi, $yi) use ($y, $k) {
+        $walls = buildWallsUL($k, $y);
+        if ($k == 2) {
+            $walls[$y][3] = 1;
+        }
         return $walls;
     };
     moveTo($n, $x, $y + 1, $board, $result, $bwFun);
 
-    $walls = $bwFun(2, $y);
+    $walls = $bwFun($k, $y);
     $walls[$y + 1][$x] = 1;
-    moveSpaceTo(2, $y, $board, $walls, $result);
-    list($sx, $sy) = [2, $y];
+    moveSpaceTo($k, $y, $board, $walls, $result);
+    list($sx, $sy) = [$k, $y];
     while ($sx != $x) {
         step($sx, $sy, [$sx < $x ? 1 : -1, 0], $board, $result);
     }
     step($sx, $sy, [0, 1], $board, $result);
 
     return [$result, $board];
+}
+
+function finishRowForTwo($x, $y, $n, $board)
+{
+    return finishRow($x, $y, $n, $board, 2);
 }
 
 function finishRowForThree($x, $y, $n, $board)
 {
-    $result = [];
-
-    $bwFun = function ($xi, $yi) use ($y) {
-        return buildWallsUL(3, $y);
-    };
-    moveTo($n, $x, $y + 1, $board, $result, $bwFun);
-
-    $walls = $bwFun(3, $y);
-    $walls[$y + 1][$x] = 1;
-    moveSpaceTo(3, $y, $board, $walls, $result);
-    list($sx, $sy) = [3, $y];
-    while ($sx != $x) {
-        step($sx, $sy, [$sx < $x ? 1 : -1, 0], $board, $result);
-    }
-    step($sx, $sy, [0, 1], $board, $result);
-
-    return [$result, $board];
+    return finishRow($x, $y, $n, $board, 3);
 }
 
-function fixRow($n, $tx, $ty, &$board, &$result)
+function fixRow($n, $tx, $ty, $board)
 {
+    $result = [];
+
     $bwFun = function ($x, $y) {
         return buildWallsUL($x, $y - 2);
     };
@@ -457,6 +402,8 @@ function fixRow($n, $tx, $ty, &$board, &$result)
             step($sx, $sy, $m, $board, $result);
         }
     }
+
+    return [$result, $board];
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -540,21 +487,13 @@ function moveSpaceTo($tx, $ty, &$board, $walls, &$result)
     $queue = [[$tx, $ty]];
     while ($walls[$sy][$sx] == 0 && count($queue) > 0) {
         list($x, $y) = array_shift($queue);
-        if ($x < 3 && $walls[$y][$x + 1] === 0) {
-            $walls[$y][$x + 1] = [-1, 0];
-            $queue[] = [$x + 1, $y];
-        }
-        if ($x > 0 && $walls[$y][$x - 1] === 0) {
-            $walls[$y][$x - 1] = [1, 0];
-            $queue[] = [$x - 1, $y];
-        }
-        if ($y < 3 && $walls[$y + 1][$x] === 0) {
-            $walls[$y + 1][$x] = [0, -1];
-            $queue[] = [$x, $y + 1];
-        }
-        if ($y > 0 && $walls[$y - 1][$x] === 0) {
-            $walls[$y - 1][$x] = [0, 1];
-            $queue[] = [$x, $y - 1];
+        $dirs = [[0, -1], [-1, 0], [1, 0], [0, 1]];
+        foreach ($dirs as $d) {
+            list($nx, $ny) = [$x + $d[0], $y + $d[1]];
+            if (0 <= $nx && $nx <= 3 && 0 <= $ny && $ny <= 3 && $walls[$ny][$nx] == 0) {
+                $walls[$ny][$nx] = [-$d[0], -$d[1]];
+                $queue[] = [$nx, $ny];
+            }
         }
     }
 
@@ -611,10 +550,6 @@ function writeResult($result)
         echo $n . "\n";
     }
 }
-
-//
-// Array utilities
-//
 
 function flipLR(array $arrays)
 {
