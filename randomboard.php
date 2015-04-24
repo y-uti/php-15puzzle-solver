@@ -2,66 +2,43 @@
 
 function main()
 {
-    $sequence = range(0, 15);
-    shuffle($sequence);
+    $problem = range(0, 15);
+    shuffle($problem);
 
-    $board = toBoard($sequence);
-
-    if (!isSolvable($sequence)) {
-        $board = array_map('array_reverse', $board);
+    if (!isSolvable($problem)) {
+        $problem = flipLR($problem);
     }
 
-    printBoard($board);
+    printProblem($problem);
 }
 
-function isSolvable(array $sequence)
+function isSolvable(array $problem)
 {
-    $n = count($sequence);
-
-    $sum = 0;
-    for ($i = 0; $i < $n; ++$i) {
-        for ($j = $i + 1; $j < $n; ++$j) {
-            if ($sequence[$j] < $sequence[$i]) {
-                ++$sum;
-            }
+    $i = 0;
+    while (!is_null($n = array_shift($problem))) {
+        if ($n > 0) {
+            $i += count(array_filter($problem, function ($m) use ($n) {
+                return $m != 0 && $m < $n;
+            }));
+        } else {
+            $i += intval(count($problem) / 4);
         }
     }
 
-    $rownum = intval((array_search(0, $sequence) - 1) / 4);
-    $sum += $rownum;
-
-    return $sum % 2 == 0;
+    return $i % 2 == 0;
 }
 
-function toBoard(array $sequence)
+function flipLR(array $problem)
 {
-    return array_map(function ($i) use ($sequence) {
-        return array_slice($sequence, $i * 4, 4);
-    }, range(0, 3));
+    return array_map(function ($i) use ($problem) {
+        return $problem[$i];
+    }, [3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12]);
 }
 
-function flipLR(array $board)
+function printProblem(array $problem)
 {
-    return array_map('array_reverse', $board);
-}
-
-function locationOf($n, $board)
-{
-    foreach ($board as $y => $r) {
-        foreach ($r as $x => $i) {
-            if ($i == $n) {
-                return array($x, $y);
-            }
-        }
-    }
-}
-
-function printBoard(array $board)
-{
-    foreach ($board as $row) {
-        echo implode(' ', array_map(function ($n) {
-            return $n == 0 ? '*' : $n;
-        }, $row)) . "\n";
+    foreach ($problem as $i => $n) {
+        printf("%s%s", $n ?: '*', $i % 4 < 3 ? ' ' : "\n");
     }
 }
 
