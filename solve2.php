@@ -1,9 +1,5 @@
 <?php
 
-class PathNotFoundException extends Exception
-{
-}
-
 function main()
 {
     $board = readBoard();
@@ -30,72 +26,30 @@ function readBoard()
 
 function solveUD($board)
 {
-    $goal = [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12],
-        [13, 14, 15, 0],
-    ];
-    return solve($board, $goal);
+    return solve($board, goal());
 }
 
 function solveLR($board)
 {
-    $board = array_map(null, $board[0], $board[1], $board[2], $board[3]);
-    $goal = [
-        [1, 5, 9, 13],
-        [2, 6, 10, 14],
-        [3, 7, 11, 15],
-        [4, 8, 12, 0],
-    ];
-    return solve($board, $goal);
+    return solve(transpose($board), transpose(goal()));
 }
 
 function solve($board, $goal)
 {
-    $strategies = [];
-
-    $strategies[] = [
-        function ($b) use ($goal) {
-            return optimalSolverForToUpperThreeRows($b, $goal);
-        },
+    $strategyChain = [
+        'optimalSolverForToUpperThreeRows',
+        'optimalSolverForFirstRow',
+        'optimalSolverForSecondRow',
+        'optimalSolverForLowerTwoRows',
     ];
 
-    $strategies[] = [
-        function ($b) use ($goal) {
-            return optimalSolverForFirstRow($b, $goal);
-        },
-    ];
-
-    $strategies[] = [
-        function ($b) use ($goal) {
-            return optimalSolverForSecondRow($b, $goal);
-        },
-    ];
-
-    $strategies[] = [
-        function ($b) use ($goal) {
-            return optimalSolverForLowerTwoRows($b, $goal);
-        },
-    ];
-
-    $best = false;
-    foreach (cartesianProduct($strategies) as $chain) {
-        $b = $board;
-        $r = [];
-        try {
-            foreach ($chain as $s) {
-                list($rnext, $b) = $s($b);
-                $r = array_merge($r, $rnext);
-            }
-            if ($best === false || count($r) < count($best)) {
-                $best = $r;
-            }
-        } catch (PathNotFoundException $e) {
-        }
+    $result = [];
+    foreach ($strategyChain as $strategy) {
+        list($r, $board) = $strategy($board, $goal);
+        $result = array_merge($result, $r);
     }
 
-    return $best;
+    return $result;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -323,25 +277,19 @@ function writeResult($result)
     }
 }
 
-function flipLR(array $arrays)
+function goal()
 {
-    return array_map('array_reverse', $arrays);
+    return [
+        [ 1,  2,  3,  4],
+        [ 5,  6,  7,  8],
+        [ 9, 10, 11, 12],
+        [13, 14, 15,  0],
+    ];
 }
 
-function cartesianProduct(array $arrays)
+function transpose($board)
 {
-    if (!$arrays) {
-        return [[]];
-    } else {
-        $tail = array_pop($arrays);
-        $result = [];
-        foreach (cartesianProduct($arrays) as $values) {
-            foreach ($tail as $v) {
-                $result[] = array_merge($values, array($v));
-            }
-        }
-        return $result;
-    }
+    return array_map(null, $board[0], $board[1], $board[2], $board[3]);
 }
 
 main();
