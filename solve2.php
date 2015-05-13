@@ -76,18 +76,13 @@ function optimalSolverForToUpperThreeRows($board, $goal)
         step($x, $y, $dirs[$i], $board, $result);
         $numbers = $goal[0];
         usort($numbers, function ($a, $b) use ($board) {
-            return compareCells($a, $b, $board);
+            return cellNumberOf($a, $board) - cellNumberOf($b, $board);
         });
         $numbers[] = 0;
         $encnum = encode($board, $numbers, 0);
     }
 
     return [$result, $board];
-}
-
-function compareCells($a, $b, $board)
-{
-    return cellNumberOf($a, $board) - cellNumberOf($b, $board);
 }
 
 function isSolved($encnum)
