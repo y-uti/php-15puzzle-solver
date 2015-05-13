@@ -87,21 +87,14 @@ function optimalSolverForToUpperThreeRows($board, $goal)
 
 function compareCells($a, $b, $board)
 {
-    list($ax, $ay) = locationOf($a, $board);
-    list($bx, $by) = locationOf($b, $board);
-
-    $ac = $ay * 4 + $ax;
-    $bc = $by * 4 + $bx;
-
-    return $ac - $bc;
+    return cellNumberOf($a, $board) - cellNumberOf($b, $board);
 }
 
 function isSolved($encnum)
 {
     $board = decode($encnum);
     foreach ([1, 2, 3, 4, 0] as $n) {
-        list($x, $y) = locationOf($n, $board);
-        if ($y == 3) {
+        if (cellNumberOf($n, $board) >= 12) {
             return false;
         }
     }
@@ -149,30 +142,12 @@ function optimalSolverForSecondRow($board, $goal)
 
 function optimalSolverForFirstRow($board, $goal)
 {
-    $b = [
-        $board[3],
-        $board[0],
-        $board[1],
-        $board[2],
-    ];
+    list($result, $board) = optimalSolverForSecondRow(
+        rotateRow($board, -1),
+        rotateRow($goal, -1)
+    );
 
-    $g = [
-        $goal[3],
-        $goal[0],
-        $goal[1],
-        $goal[2],
-    ];
-
-    list($result, $b) = optimalSolverForSecondRow($b, $g);
-
-    $board = [
-        $b[1],
-        $b[2],
-        $b[3],
-        $b[0],
-    ];
-
-    return [$result, $board];
+    return [$result, rotateRow($board, 1)];
 }
 
 $dataForLowerTwoRowsSolver = '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';
@@ -219,8 +194,7 @@ function encode($board, $numbers, $row)
     $encnum = 0;
     $scale = 1;
     foreach ($numbers as $n) {
-        list($x, $y) = locationOf($n, $board);
-        $c = $y * 4 + $x;
+        $c = cellNumberOf($n, $board);
         $i = array_search($c, $cells);
         $encnum += $i * $scale;
         $scale *= count($cells);
@@ -234,13 +208,14 @@ function encode($board, $numbers, $row)
 
 function locationOf($n, $board)
 {
-    foreach ($board as $y => $r) {
-        foreach ($r as $x => $i) {
-            if ($i == $n) {
-                return array($x, $y);
-            }
-        }
-    }
+    $cell = cellNumberOf($n, $board);
+
+    return [$cell % 4, intval($cell / 4)];
+}
+
+function cellNumberOf($n, $board)
+{
+    return array_search($n, array_reduce($board, 'array_merge', []));
 }
 
 function step(&$x, &$y, $d, &$board, &$result)
@@ -258,23 +233,16 @@ function step(&$x, &$y, $d, &$board, &$result)
 function printBoard($board)
 {
     foreach ($board as $row) {
-        foreach ($row as $n) {
-            if ($n > 0) {
-                printf("%2d ", $n);
-            } else {
-                echo "   ";
-            }
-        }
-        echo "\n";
+        echo implode(' ', array_map(function ($n) {
+            return sprintf('%2s', $n ?: ' ');
+        }, $row)) . "\n";
     }
     echo "\n";
 }
 
 function writeResult($result)
 {
-    foreach ($result as $n) {
-        echo $n . "\n";
-    }
+    echo implode("\n", $result) . "\n";
 }
 
 function goal()
@@ -290,6 +258,13 @@ function goal()
 function transpose($board)
 {
     return array_map(null, $board[0], $board[1], $board[2], $board[3]);
+}
+
+function rotateRow($board, $n)
+{
+    return array_map(function ($i) use ($board) {
+        return $board[($i + 4) % 4];
+    }, range($n, $n + 3));
 }
 
 main();
