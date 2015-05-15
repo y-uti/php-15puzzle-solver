@@ -214,7 +214,6 @@ function printBoard($board)
             return sprintf('%2s', $n ?: ' ');
         }, $row)) . "\n";
     }
-    echo "\n";
 }
 
 function writeResult($result)
