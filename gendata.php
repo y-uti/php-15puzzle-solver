@@ -1,16 +1,27 @@
 <?php
 
+$dirOrder = $argv[1];
+
 function findAllPath($numbers, $row, $ignoreOrder, $queue, $result)
 {
+    global $dirOrder;
+
+    $dirs = [
+        'D' => [ 0, -1],
+        'R' => [-1,  0],
+        'L' => [ 1,  0],
+        'U' => [ 0,  1],
+    ];
+
     $cnt = 0;
     while ($cnt < count($queue)) {
         $encnum = $queue[$cnt++];
         $board = decode($encnum, $numbers, $row);
         $p = locationOf(0, $board);
-        tryNext($p, [0, -1], 'D', $board, $numbers, $row, $ignoreOrder, $queue, $result);
-        tryNext($p, [-1, 0], 'R', $board, $numbers, $row, $ignoreOrder, $queue, $result);
-        tryNext($p, [1, 0], 'L', $board, $numbers, $row, $ignoreOrder, $queue, $result);
-        tryNext($p, [0, 1], 'U', $board, $numbers, $row, $ignoreOrder, $queue, $result);
+        for ($i = 0; $i < 4; ++$i) {
+            $d = $dirOrder[$i];
+            tryNext($p, $dirs[$d], $d, $board, $numbers, $row, $ignoreOrder, $queue, $result);
+        }
     }
 
     return $result;
